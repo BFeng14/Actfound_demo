@@ -20,7 +20,7 @@ class ActFoundRegressor(RegressorBase):
         y_task = y_task.float().cuda()
         x_task = x_task.float().cuda()
 
-        names_weights_copy, _, _ = self.inner_loop(x_task, y_task, 0, split,False, -1, num_steps)
+        names_weights_copy, support_loss_each_step, _ = self.inner_loop(x_task, y_task, 0, split,False, -1, num_steps)
 
 
         _, target_preds = self.net_forward(x=x_task,
@@ -30,7 +30,7 @@ class ActFoundRegressor(RegressorBase):
                                            backup_running_statistics=False, training=True,
                                            num_step=num_steps - 1)
 
-        return target_preds
+        return target_preds, support_loss_each_step[0]
 
     def net_forward(self, x, y, split, weights, backup_running_statistics, training, num_step, assay_idx=None,
                     is_support=False, **kwargs):
