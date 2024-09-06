@@ -7,9 +7,9 @@ from .system_base import RegressorBase
 from .meta_neural_network_architectures import FCNReLUNormNetworkQSAR, AssayFCNReLUNormNetworkReg
 
 
-class ActFoundRegressor(RegressorBase):
+class ActFoundKNNRegressor(RegressorBase):
     def __init__(self, input_shape, args):
-        super(ActFoundRegressor, self).__init__(input_shape, args)
+        super(ActFoundKNNRegressor, self).__init__(input_shape, args)
         self.regressor = FCNReLUNormNetworkQSAR(input_shape=self.input_shape, args=self.args, meta=True).cuda()
         self.softmax = nn.Softmax(dim=0)
         self.post_init(args)

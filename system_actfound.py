@@ -30,7 +30,7 @@ class ActFoundRegressor(RegressorBase):
                                            backup_running_statistics=False, training=True,
                                            num_step=num_steps - 1)
 
-        return target_preds, support_loss_each_step[0]
+        return target_preds.detach().cpu().numpy(), support_loss_each_step[0]
 
     def net_forward(self, x, y, split, weights, backup_running_statistics, training, num_step, assay_idx=None,
                     is_support=False, **kwargs):
