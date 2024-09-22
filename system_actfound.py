@@ -32,6 +32,51 @@ class ActFoundRegressor(RegressorBase):
 
         return target_preds.detach().cpu().numpy(), support_loss_each_step[0]
 
+    
+    def set_optimizer(self, lr):
+        self.is_training_phase = True
+        import torch.optim as optim
+        opt = optim.Adam(self.trainable_parameters(), lr=lr, amsgrad=False)
+        self.optimizer = opt
+
+
+    def run_predict_full_finetune(self, x_task, y_task, split, iters=20, random_sample=0.6):
+        y_task = y_task.float().cuda()
+        x_task = x_task.float().cuda()
+        split = split.cuda()
+        y_pred_each_iter = []
+        for i in range(iters):
+            if random_sample < 1.:
+                num_ones = (split == 1).sum().item()
+                num_ones_to_replace = int(num_ones * random_sample)
+                one_indices = (split == 1).nonzero().squeeze()
+                replace_indices = torch.randperm(num_ones)[:num_ones_to_replace]
+                replace_indices = one_indices[replace_indices]
+                split_train = split.clone()
+                split_train[replace_indices] = 0
+            else:
+                split_train = split.clone()
+
+
+            loss, _ = self.net_forward(x=x_task,
+                            y=y_task,
+                            split=split_train,
+                            is_support=True,
+                            weights=None,
+                            backup_running_statistics=False, training=True,
+                            num_step=self.args.num_updates - 1)
+            self.meta_update(loss=loss)
+            _, target_preds = self.net_forward(x=x_task,
+                                y=y_task,
+                                split=split,
+                                weights=None,
+                                backup_running_statistics=False, training=True,
+                                num_step=self.args.num_updates - 1)
+            y_pred_each_iter.append(target_preds.detach().cpu().numpy())
+        return y_pred_each_iter
+
+    
+    
     def net_forward(self, x, y, split, weights, backup_running_statistics, training, num_step, assay_idx=None,
                     is_support=False, **kwargs):
 
